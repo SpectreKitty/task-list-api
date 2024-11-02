@@ -1,6 +1,7 @@
-from flask import Blueprint, abort, make_response, request, Response, json
+from flask import Blueprint, abort, make_response, request, Response
 from app.models.task import Task
 from ..db import db
+from sqlalchemy import desc
 
 tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -35,10 +36,18 @@ def get_all_tasks():
     query = db.select(Task)
 
     # title_param = request.args.get("title")
+    sort_param = request.args.get("sort")
     # description_param = request.args.get("description")
+
+    if sort_param == "asc":
+        query = query.order_by(Task.title)
+
+    if sort_param == "desc":
+        query = query.order_by(desc(Task.title))
 
     # if title_param:
     #     query = query.where(Task.title.ilike(f"%{title_param}%"))
+
     # if description_param:
     #     query = query.where(Task.description.ilike(f"%{description_param}%"))
 
