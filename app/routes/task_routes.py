@@ -1,7 +1,6 @@
 from flask import Blueprint, abort, make_response, request, Response
 from app.models.task import Task
 from ..db import db
-from sqlalchemy import desc
 
 tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -43,7 +42,7 @@ def get_all_tasks():
         query = query.order_by(Task.title)
 
     if sort_param == "desc":
-        query = query.order_by(desc(Task.title))
+        query = query.order_by(Task.title.desc())
 
     # if title_param:
     #     query = query.where(Task.title.ilike(f"%{title_param}%"))
