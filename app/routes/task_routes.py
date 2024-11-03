@@ -2,8 +2,8 @@ from flask import Blueprint, abort, make_response, request, Response
 from datetime import datetime, timezone
 from app.models.task import Task
 from ..db import db
-from app.secrets.secrets import SLACK_API_KEY
 import requests
+import os
 
 tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -109,15 +109,14 @@ def mark_task_as_complete(task_id):
 
     task.completed_at = datetime.now(timezone.utc)
 
-    # not sure how to use os.environ.get() for this.
-
-    slack_message = f"Someone just completed the task {task.title}"
     
-    url = "https://slack.com/api/chat.postMessage"
+    # is this using environment variables too much or is it ok?
+    slack_message = os.environ.get("SLACK_MESSAGE")
+    url = os.environ.get("URL")
+    slack_api_key = os.environ.get("SLACK_API_KEY")
+    channel = os.environ.get("CHANNEL")
     
-    headers = {"Authorization": f"Bearer {SLACK_API_KEY}", "Content-Type": "application/json"}
-
-    channel = "api"  
+    headers = {"Authorization": f"Bearer {slack_api_key}", "Content-Type": "application/json"}
 
     data = {
         "channel": channel,
