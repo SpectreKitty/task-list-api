@@ -109,9 +109,8 @@ def mark_task_as_complete(task_id):
 
     task.completed_at = datetime.now(timezone.utc)
 
-    
-    # is this using environment variables too much or is it ok?
-    slack_message = os.environ.get("SLACK_MESSAGE")
+    slack_message = f"Someone just completed the task {task.title}"
+
     url = os.environ.get("URL")
     slack_api_key = os.environ.get("SLACK_API_KEY")
     channel = os.environ.get("CHANNEL")
