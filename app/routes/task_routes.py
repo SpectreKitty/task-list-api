@@ -2,6 +2,8 @@ from flask import Blueprint, abort, make_response, request, Response
 from datetime import datetime, timezone
 from app.models.task import Task
 from ..db import db
+from app.secrets.secrets import SLACK_API_KEY
+import requests
 
 tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -107,6 +109,23 @@ def mark_task_as_complete(task_id):
 
     task.completed_at = datetime.now(timezone.utc)
 
+    # not sure how to use os.environ.get() for this.
+
+    slack_message = f"Someone just completed the task {task.title}"
+    
+    url = "https://slack.com/api/chat.postMessage"
+    
+    headers = {"Authorization": f"Bearer {SLACK_API_KEY}", "Content-Type": "application/json"}
+
+    channel = "api"  
+
+    data = {
+        "channel": channel,
+        "text": slack_message
+    }
+
+    requests.post(url, json=data, headers=headers, timeout=5)
+
     db.session.commit()
 
     response_body = {
@@ -117,6 +136,7 @@ def mark_task_as_complete(task_id):
             "is_complete": True
         }
     }
+
     return response_body, 200
 
 @tasks_bp.patch("/<task_id>/mark_incomplete")
