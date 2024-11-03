@@ -1,4 +1,5 @@
 from flask import Blueprint, abort, make_response, request, Response
+from datetime import datetime, timezone
 from app.models.task import Task
 from ..db import db
 
@@ -80,22 +81,6 @@ def get_one_task(task_id):
         "is_complete": task.completed_at if task.completed_at is not None else False
         }}
 
-def validate_task(task_id):
-    try:
-        task_id = int(task_id)
-    except:
-        response = {"message": f"invalid task id"}
-        abort(make_response(response, 400))
-
-    query = db.select(Task).where(Task.id == task_id)
-    task = db.session.scalar(query)
-
-    if not task:
-        response = {"message": f"task not found"}
-        abort(make_response(response, 404))
-        
-    return task
-
 @tasks_bp.put("/<task_id>")
 def update_task(task_id):
     task = validate_task(task_id)
@@ -116,6 +101,42 @@ def update_task(task_id):
     }
     return response_body, 200
 
+@tasks_bp.patch("/<task_id>/mark_complete")
+def mark_task_as_complete(task_id):
+    task = validate_task(task_id)
+
+    task.completed_at = datetime.now(timezone.utc)
+
+    db.session.commit()
+
+    response_body = {
+        "task": {
+            "id": task.id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": True
+        }
+    }
+    return response_body, 200
+
+@tasks_bp.patch("/<task_id>/mark_incomplete")
+def mark_task_as_incomplete(task_id):
+    task = validate_task(task_id)
+
+    task.completed_at = None
+
+    db.session.commit()
+
+    response_body = {
+        "task": {
+            "id": task.id,
+            "title": task.title,
+            "description": task.description,
+            "is_complete": False
+        }
+    }
+    return response_body, 200
+
 @tasks_bp.delete("/<task_id>")
 def delete_task(task_id):
     task = validate_task(task_id)
@@ -130,3 +151,21 @@ def delete_task(task_id):
         status=200,
         mimetype="application/json"
     )
+
+def validate_task(task_id):
+    try:
+        task_id = int(task_id)
+    except:
+        response = {"message": f"invalid task id"}
+        abort(make_response(response, 400))
+
+    query = db.select(Task).where(Task.id == task_id)
+    task = db.session.scalar(query)
+
+    if not task:
+        response = {"message": f"task not found"}
+        abort(make_response(response, 404))
+        
+    return task
+
+# may want to create to_dict function later
