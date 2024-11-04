@@ -11,7 +11,7 @@ tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 def create_task():
     request_body = request.get_json()
 
-    # how can I do this in validate function
+    # how can I do this in validate function?
     if not request_body.get("title") or not request_body.get("description"):
         return {"details": "Invalid data"}, 400
     
@@ -56,9 +56,6 @@ def get_all_tasks():
     query = query.order_by(Task.id)
 
     tasks = db.session.scalars(query)
-    
-    # could also be written as:
-    # tasks = db.session.execute(query).scalars()
 
     tasks_response = []
     for task in tasks:

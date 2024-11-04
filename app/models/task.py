@@ -1,4 +1,4 @@
-from sqlalchemy import func, DateTime
+from sqlalchemy import DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 from datetime import datetime
 from ..db import db
@@ -8,7 +8,3 @@ class Task(db.Model):
     title: Mapped[str]
     description: Mapped[str]
     completed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-
-    @property
-    def completed(self) -> bool:
-        return self.completed_at is not None
