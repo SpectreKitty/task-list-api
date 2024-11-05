@@ -1,7 +1,9 @@
 from flask import Blueprint, abort, make_response, request, Response
 from datetime import datetime, timezone
 from app.models.goal import Goal
+from app.models.task import Task
 from ..db import db
+import json
 import requests
 import os
 
@@ -29,6 +31,34 @@ def create_goal():
     }}
     
     return response, 201
+
+@goals_bp.post("/<goal_id>/tasks")
+def create_task_with_goal(goal_id):
+    request_body = request.get_json()
+
+    # if not request_body.get("task_ids") or not isinstance(request_body["task_ids"], list):
+    #     return {"details": "Invalid data"}, 400
+
+    goal = Goal.query.get(goal_id)
+    # if not goal:
+    #     return {"message": f"Goal with id {goal_id} not found"}, 404
+
+    new_task_ids = []
+    
+    for task_id in request_body["task_ids"]:
+        task = Task.query.get(task_id)
+        if task:
+            task.goal = goal  
+            new_task_ids.append(task.id)  
+
+    db.session.commit()
+
+    response = {
+        "id": goal.id,
+        "task_ids": new_task_ids  
+    }
+
+    return response, 200
 
 @goals_bp.get("")
 def get_all_goals():
@@ -69,6 +99,31 @@ def get_one_goal(goal_id):
         "title": goal.title,
         }}
 
+@goals_bp.get("/<goal_id>/tasks")
+def get_tasks_by_goal(goal_id):
+    goal = validate_goal(goal_id)
+    
+    tasks = Task.query.where(Task.goal_id == goal_id)
+
+    task_list = []
+    
+    for task in tasks:
+            task_list.append({
+                "id": task.id,
+                "goal_id": goal.id,
+                "title": task.title,
+                "description": task.description,
+                "is_complete": task.completed_at is not None
+                })
+        
+    response_body = {
+        "id": goal.id,
+        "title": goal.title, 
+        "tasks": task_list
+    }
+
+    return response_body, 200
+
 @goals_bp.put("/<goal_id>")
 def update_goal(goal_id):
     goal = validate_goal(goal_id)
@@ -79,11 +134,11 @@ def update_goal(goal_id):
     db.session.commit()
     
     response_body = {
-        "goal": {
+            "goal": {
             "id": goal.id,
-            "title": goal.title,
-        }
-    }
+            "title": goal.title
+        }}
+    
     return response_body, 200
 
 @goals_bp.delete("/<goal_id>")

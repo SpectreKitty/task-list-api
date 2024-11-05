@@ -77,7 +77,8 @@ def get_one_task(task_id):
         "id": task.id,
         "title": task.title,
         "description": task.description,
-        "is_complete": task.completed_at if task.completed_at is not None else False
+        "is_complete": task.completed_at if task.completed_at is not None else False,
+        "goal_id": task.goal_id
         }}
 
 @tasks_bp.put("/<task_id>")
