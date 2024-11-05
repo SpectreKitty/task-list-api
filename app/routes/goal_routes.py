@@ -1,9 +1,9 @@
 from flask import Blueprint, abort, make_response, request, Response
 from datetime import datetime, timezone
+from .route_utilities import validate_model
 from app.models.goal import Goal
 from app.models.task import Task
 from ..db import db
-import json
 import requests
 import os
 
@@ -91,7 +91,7 @@ def get_all_goals():
 
 @goals_bp.get("/<goal_id>")
 def get_one_goal(goal_id):
-    goal = validate_goal(goal_id)
+    goal = validate_model(Goal, goal_id)
 
     return {
         "goal":{
@@ -101,7 +101,7 @@ def get_one_goal(goal_id):
 
 @goals_bp.get("/<goal_id>/tasks")
 def get_tasks_by_goal(goal_id):
-    goal = validate_goal(goal_id)
+    goal = validate_model(Goal, goal_id)
     
     tasks = Task.query.where(Task.goal_id == goal_id)
 
@@ -126,7 +126,7 @@ def get_tasks_by_goal(goal_id):
 
 @goals_bp.put("/<goal_id>")
 def update_goal(goal_id):
-    goal = validate_goal(goal_id)
+    goal = validate_model(Goal, goal_id)
     request_body = request.get_json()
 
     goal.title = request_body["title"]
@@ -143,7 +143,7 @@ def update_goal(goal_id):
 
 @goals_bp.delete("/<goal_id>")
 def delete_goal(goal_id):
-    goal = validate_goal(goal_id)
+    goal = validate_model(Goal, goal_id)
 
     db.session.delete(goal)
     db.session.commit()
@@ -155,19 +155,3 @@ def delete_goal(goal_id):
         status=200,
         mimetype="application/json"
     )
-
-def validate_goal(goal_id):
-    try:
-        goal_id = int(goal_id)
-    except:
-        response = {"message": f"invalid goal id"}
-        abort(make_response(response, 400))
-
-    query = db.select(Goal).where(Goal.id == goal_id)
-    goal = db.session.scalar(query)
-
-    if not goal:
-        response = {"message": f"goal not found"}
-        abort(make_response(response, 404))
-        
-    return goal

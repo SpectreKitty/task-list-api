@@ -1,6 +1,7 @@
 from flask import Blueprint, abort, make_response, request, Response
 from datetime import datetime, timezone
 from app.models.task import Task
+from .route_utilities import validate_model
 from ..db import db
 import requests
 import os
@@ -11,7 +12,7 @@ tasks_bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 def create_task():
     request_body = request.get_json()
 
-    # how can I do this in validate function?
+    # can I do this in validate function?
     if not request_body.get("title") or not request_body.get("description"):
         return {"details": "Invalid data"}, 400
     
@@ -70,20 +71,23 @@ def get_all_tasks():
 
 @tasks_bp.get("/<task_id>")
 def get_one_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
 
-    return {
-        "task":{
+    task_response = {
         "id": task.id,
         "title": task.title,
         "description": task.description,
-        "is_complete": task.completed_at if task.completed_at is not None else False,
-        "goal_id": task.goal_id
-        }}
+        "is_complete": task.completed_at if task.completed_at is not None else False
+    }
+
+    if task.goal_id:
+        task_response["goal_id"] = task.goal_id
+
+    return {"task": task_response}
 
 @tasks_bp.put("/<task_id>")
 def update_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
     request_body = request.get_json()
 
     task.title = request_body["title"]
@@ -103,7 +107,7 @@ def update_task(task_id):
 
 @tasks_bp.patch("/<task_id>/mark_complete")
 def mark_task_as_complete(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
 
     task.completed_at = datetime.now(timezone.utc)
 
@@ -137,7 +141,7 @@ def mark_task_as_complete(task_id):
 
 @tasks_bp.patch("/<task_id>/mark_incomplete")
 def mark_task_as_incomplete(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
 
     task.completed_at = None
 
@@ -155,7 +159,7 @@ def mark_task_as_incomplete(task_id):
 
 @tasks_bp.delete("/<task_id>")
 def delete_task(task_id):
-    task = validate_task(task_id)
+    task = validate_model(Task, task_id)
 
     db.session.delete(task)
     db.session.commit()
@@ -167,21 +171,3 @@ def delete_task(task_id):
         status=200,
         mimetype="application/json"
     )
-
-def validate_task(task_id):
-    try:
-        task_id = int(task_id)
-    except:
-        response = {"message": f"invalid task id"}
-        abort(make_response(response, 400))
-
-    query = db.select(Task).where(Task.id == task_id)
-    task = db.session.scalar(query)
-
-    if not task:
-        response = {"message": f"task not found"}
-        abort(make_response(response, 404))
-        
-    return task
-
-# may want to create to_dict function later
