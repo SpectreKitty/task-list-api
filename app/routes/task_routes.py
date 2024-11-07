@@ -162,7 +162,7 @@ def mark_task_as_complete(task_id):
         "text": slack_message
     }
     # does a post on the slack api call putting together the pieces we had previously built
-    requests.post(url, json=data, headers=headers, timeout=5)
+    requests.post(url, json=data, headers=headers)
 
     # saves the change on the db
     db.session.commit()
