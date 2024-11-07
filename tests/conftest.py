@@ -57,14 +57,14 @@ def one_task(app):
 def three_tasks(app):
     db.session.add_all([
         Task(title="Water the garden 🌷", 
-             description="", 
-             completed_at=None),
+            description="", 
+            completed_at=None),
         Task(title="Answer forgotten email 📧", 
-             description="", 
-             completed_at=None),
+            description="", 
+            completed_at=None),
         Task(title="Pay my outstanding tickets 😭", 
-             description="", 
-             completed_at=None)
+            description="", 
+            completed_at=None)
     ])
     db.session.commit()
 
@@ -102,4 +102,14 @@ def one_task_belongs_to_one_goal(app, one_goal, one_task):
     task = Task.query.first()
     goal = Goal.query.first()
     goal.tasks.append(task)
+    db.session.commit()
+
+
+# EXTRA FIXTURES
+@pytest.fixture
+def three_goals(app):
+    db.session.add_all([
+        Goal(title="Embrace the gardening life"),
+        Goal(title="Self-care"),
+        Goal(title="Be debt-free")])
     db.session.commit()

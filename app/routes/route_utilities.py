@@ -1,6 +1,9 @@
 from flask import abort, make_response
 from ..db import db
 
+# will make sure that models(goal or task) will be an integer 
+# when it needs to be and respond appropriately if its not, 
+# or if its empty will also send appropriate message.
 
 def validate_model(cls, model_id):
     try:
