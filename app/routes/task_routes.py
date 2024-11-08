@@ -149,7 +149,7 @@ def mark_task_as_complete(task_id):
     slack_message = f"Someone just completed the task {task.title}"
 
     # builds the pieces of the api call info from the .env variables
-    url = os.environ.get("URL")
+    url = "https://slack.com/api/chat.postMessage"
     slack_api_key = os.environ.get("SLACK_API_KEY")
     channel = os.environ.get("CHANNEL")
     
