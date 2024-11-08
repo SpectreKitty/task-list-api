@@ -42,9 +42,8 @@ def create_task_with_goal(goal_id):
     # turning json into python dict
     request_body = request.get_json()
 
-    # honestly not sure if this would be wanted or needed
-    # if not request_body.get("task_ids") or not isinstance(request_body["task_ids"], list):
-    #     return {"details": "Invalid data"}, 400
+    if not request_body.get("task_ids") or not isinstance(request_body["task_ids"], list):
+        return {"details": "Invalid data"}, 400
 
     # will get the goal with goal_id from database
     goal = Goal.query.get(goal_id)
@@ -83,7 +82,7 @@ def get_all_goals():
     query = db.select(Goal)
 
     title_param = request.args.get("title")
-    
+
     if title_param:
         query = query.where(Goal.title.ilike(f"%{title_param}%"))
     
